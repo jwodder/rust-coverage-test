@@ -1,0 +1,70 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Configure Git identity
+        # Needed for a couple tests
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'ghactions@nil.nil'
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          default: true
+
+      - name: Activate cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install grcov
+        run: |
+          rustup component add llvm-tools-preview
+          cargo install grcov
+
+      - name: Build crate
+        run: cargo build --verbose
+        env:
+          RUSTFLAGS: "-Cinstrument-coverage"
+
+      - name: Test crate
+        run: cargo test --verbose
+        env:
+          LLVM_PROFILE_FILE: "target/coverage/prof/%p-%m.profraw"
+          RUSTFLAGS: "-Cinstrument-coverage"
+
+      - name: Create coverage report
+        run: |
+         grcov \
+           --source-dir . \
+           --binary-path target/debug \
+           --branch \
+           --excl-start 'mod tests \{' \
+           --ignore 'tests/*' \
+           -t lcov \
+           -o lcov.info \
+           target/coverage/prof
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+
+# vim:set et sts=2:
