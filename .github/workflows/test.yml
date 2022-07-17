@@ -1,0 +1,60 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Configure Git identity
+        # Needed for a couple tests
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'ghactions@nil.nil'
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          default: true
+
+      - name: Activate cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Test with coverage
+        uses: actions-rs/tarpaulin@v0.1
+        with:
+          version: '0.19.1'
+          args: '--exclude-files "tests/*" --follow-exec --output-dir coverage'
+          out-type: lcov
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: ${{ matrix.toolchain }}
+          parallel: true
+
+  finish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Finalize Coveralls upload
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
+
+# vim:set et sts=2:
