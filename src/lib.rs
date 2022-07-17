@@ -11,7 +11,7 @@ pub fn modinverse(a: i64, n: i64) -> Option<i64> {
         (upper, uc, lower, lc) = (lower, lc, m, uc - lc * d);
     }
     if lower == 1 {
-        Some(lc % n.abs())
+        Some(lc.rem_euclid(n.abs()))
     } else {
         None
     }
