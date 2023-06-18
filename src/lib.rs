@@ -16,3 +16,13 @@ pub fn modinverse(a: i64, n: i64) -> Option<i64> {
         None
     }
 }
+
+/// # Doctest
+///
+/// ```rust
+/// # use rust_coverage_test::another_function;
+/// let x = another_function().unwrap();
+/// ```
+pub fn another_function() -> Option<i32> {
+    Some(1)
+}
