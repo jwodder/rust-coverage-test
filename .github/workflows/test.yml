@@ -28,7 +28,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install grcov
-        run: cargo install grcov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: grcov
 
       - name: Build crate
         run: cargo build --all-targets --verbose
