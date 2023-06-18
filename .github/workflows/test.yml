@@ -19,20 +19,23 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain }}
-          default: true
 
       - name: Activate cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
       - name: Test with coverage
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          version: '0.19.1'
-          args: '--exclude-files "tests/*" --follow-exec --output-dir coverage'
-          out-type: lcov
+        run: |
+          cargo tarpaulin \
+            --exclude-files "tests/*" \
+            --follow-exec \
+            --output-dir coverage \
+            --out lcov
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@master
